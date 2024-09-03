@@ -74,14 +74,23 @@ void SolveWithoutParallelization(const vector<vector<double>> &L, const vector<d
 }
 
 // Function to solve the lower triangular system Lx = y
-void SolveLowerTriangular(const vector<vector<double>> &L, const vector<double> &y, vector<double> &x, int n, int nthreads) {
+void SolveLowerTriangular(const vector<vector<double>> &L, const vector<double> &y, vector<double> &x, int n, int nthreads, double *localsum) {
 
+    int tid;
+    
     for (int i = 0; i < n; i++) {
         double sum = 0.0;
-        #pragma omp parallel for num_threads (nthreads) 
+        #pragma omp parallel for num_threads (nthreads) private(tid)
         for (int j = 0; j < i; j++) {
-            # pragma omp atomic
-            sum += L[i][j] * x[j];
+            // #pragma omp atomic
+            // sum += L[i][j] * x[j];
+            tid = omp_get_thread_num();
+            localsum[10*tid]+=L[i][j] * x[j];
+        }
+        for(int k=0;k<nthreads*10;k+=10)
+        {
+            sum+=localsum[k];
+            localsum[k] = 0.0;
         }
         x[i] = (y[i] - sum) / L[i][i];  // Forward substitution
     }
@@ -122,7 +131,7 @@ int main(int argc, char *argv[]) {
     vector<double> x;  // Solution vector
 
     // Initialize input for testing
-    n = 10000;  
+    n = 20000;  
     // InitializeInput(L, y, n);  // Replace 3 with the desired size n
 
     // Alternatively, read input from a file
@@ -137,12 +146,15 @@ int main(int argc, char *argv[]) {
             L[i][j] = j+2;
         }
     }
-
+    double localsum[num_threads*10];
+    for(auto &ele: localsum){
+        ele = 0.0;
+    }
     gettimeofday(&tv0, &tz0);
 
     // Solve the system of equations without parallelization
     // SolveWithoutParallelization(L, y, x, L.size());
-    SolveLowerTriangular(L, y, x, n, num_threads);
+    SolveLowerTriangular(L, y, x, n, num_threads, localsum);
     gettimeofday(&tv1, &tz1);
 
     printf("Time: %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
