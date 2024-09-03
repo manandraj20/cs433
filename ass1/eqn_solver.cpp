@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     vector<double> x;  // Solution vector
 
     // Initialize input for testing
-    n = 20000;  
+    n = 30000;  
     // InitializeInput(L, y, n);  // Replace 3 with the desired size n
 
     // Alternatively, read input from a file
