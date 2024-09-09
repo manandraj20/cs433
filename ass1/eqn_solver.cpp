@@ -77,22 +77,31 @@ void SolveWithoutParallelization(const vector<vector<double>> &L, const vector<d
 void SolveLowerTriangular(const vector<vector<double>> &L, const vector<double> &y, vector<double> &x, int n, int nthreads, double *localsum) {
 
     int tid;
-    
-    for (int i = 0; i < n; i++) {
-        double sum = 0.0;
-        #pragma omp parallel for num_threads (nthreads) private(tid)
-        for (int j = 0; j < i; j++) {
+    int i, j;
+    # pragma omp parallel num_threads(nthreads) private(i,j,tid)
+    for (i = 0; i < n; i++) {
+        tid = omp_get_thread_num();
+        
+        # pragma omp for schedule(static, 4) 
+        // #pragma omp parallel for num_threads (nthreads) private(tid) schedule(static, 8)
+        for (j = 0; j < i; j++) {
             // #pragma omp atomic
             // sum += L[i][j] * x[j];
-            tid = omp_get_thread_num();
+           
             localsum[10*tid]+=L[i][j] * x[j];
-        }
-        for(int k=0;k<nthreads*10;k+=10)
+        }    
+        if(tid==0)
+        { 
+            double sum = 0.0;
+            for(int k=0;k<nthreads*10;k+=10)
         {
             sum+=localsum[k];
             localsum[k] = 0.0;
         }
-        x[i] = (y[i] - sum) / L[i][i];  // Forward substitution
+        x[i] = (y[i] - sum) / L[i][i]; 
+        }
+        #pragma omp barrier
+
     }
 }
 
@@ -131,7 +140,7 @@ int main(int argc, char *argv[]) {
     vector<double> x;  // Solution vector
 
     // Initialize input for testing
-    n = 30000;  
+    n = 20000;  
     // InitializeInput(L, y, n);  // Replace 3 with the desired size n
 
     // Alternatively, read input from a file
@@ -141,7 +150,7 @@ int main(int argc, char *argv[]) {
     L.resize(n, vector<double>(n, 0.0));  // Initialize an n x n matrix with zeros
     y.resize(n);
     for (int i = 0; i < n; i++) {
-        y[i] = 1.0;
+        y[i] = i + 1.0;
         for (int j = 0; j <= i; j++) {
             L[i][j] = j+2;
         }
