@@ -8,6 +8,38 @@
 
 using namespace std;
 
+// Function to solve the lower triangular system Lx = y
+void SolveLowerTriangular(const vector<vector<double>> &L, const vector<double> &y, vector<double> &x, int n, int nthreads, double *localsum) {
+
+    int tid;
+    int i, j;
+    # pragma omp parallel num_threads(nthreads) private(i,j,tid)
+    for (i = 0; i < n; i++) {
+        tid = omp_get_thread_num();
+        
+        # pragma omp for schedule(static, 4) 
+        // #pragma omp parallel for num_threads (nthreads) private(tid) schedule(static, 8)
+        for (j = 0; j < i; j++) {
+            // #pragma omp atomic
+            // sum += L[i][j] * x[j];
+           
+            localsum[10*tid]+=L[i][j] * x[j];
+        }    
+        if(tid==0)
+        { 
+            double sum = 0.0;
+            for(int k=0;k<nthreads*10;k+=10)
+        {
+            sum+=localsum[k];
+            localsum[k] = 0.0;
+        }
+        x[i] = (y[i] - sum) / L[i][i]; 
+        }
+        #pragma omp barrier
+
+    }
+}
+
 // Function to write the solution vector x to an output file
 void WriteOutput(const string &filename, const vector<double> &x) {
     ofstream outfile(filename);
@@ -63,35 +95,7 @@ int main(int argc, char *argv[]) {
         ele = 0.0;
     }
     gettimeofday(&tv0, &tz0);
-
-     int tid;
-    int i, j;
-    # pragma omp parallel num_threads(num_threads) private(i,j,tid)
-    for (i = 0; i < n; i++) {
-        tid = omp_get_thread_num();
-        
-        # pragma omp for schedule(static, 4) 
-        // #pragma omp parallel for num_threads (nthreads) private(tid) schedule(static, 8)
-        for (j = 0; j < i; j++) {
-            // #pragma omp atomic
-            // sum += L[i][j] * x[j];
-           
-            localsum[10*tid]+=L[i][j] * x[j];
-        }    
-        if(tid==0)
-        { 
-            double sum = 0.0;
-            for(int k=0;k<num_threads*10;k+=10)
-        {
-            sum+=localsum[k];
-            localsum[k] = 0.0;
-        }
-        x[i] = (y[i] - sum) / L[i][i]; 
-        }
-        #pragma omp barrier
-
-    }
-    // SolveLowerTriangular(L, y, x, n, num_threads, localsum);
+    SolveLowerTriangular(L, y, x, n, num_threads, localsum);
     gettimeofday(&tv1, &tz1);
 
     printf("Time: %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
