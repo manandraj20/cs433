@@ -125,10 +125,10 @@ int main(int argc, char *argv[]) {
     struct timeval tv0, tv1;
 	struct timezone tz0, tz1;
 
-    if (argc != 4) {
-        cerr << "Usage: " << argv[0] << " <input_file> <output_file> <num_threads>" << endl;
-        return EXIT_FAILURE;
-    }
+    // if (argc != 4) {
+    //     cerr << "Usage: " << argv[0] << " <input_file> <output_file> <num_threads>" << endl;
+    //     return EXIT_FAILURE;
+    // }
 
     string input_file = argv[1];
     string output_file = argv[2];
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     vector<double> x;  // Solution vector
 
     // Initialize input for testing
-    n = 20000;  
+  n = stoi(argv[4]);
     // InitializeInput(L, y, n);  // Replace 3 with the desired size n
 
     // Alternatively, read input from a file
