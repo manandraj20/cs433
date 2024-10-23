@@ -72,14 +72,46 @@ unsigned char CompareAndSet(int oldVal, int newVal, int *ptr)
     return result;
 }
 
-void Acquire_Spinlock()
+void Acquire_SpinLock()
 {
     while (!CompareAndSet(0, 1, &spinLockPtr))
         ;
 }
 
-void Release_Spinlock()
+void Release_SpinLock()
 {
-    asm("":::"memory");
+    asm("" ::: "memory");
     spinLockPtr = 0;
 }
+
+int ttsLockPtr = 0;
+void Acquire_TestAndTestAndSetLock()
+{
+    while (!CompareAndSet(0, 1, &ttsLockPtr))
+    {
+        while (spinLockPtr)
+            ;
+    }
+}
+
+void Release_TestAndTestAndSetLock()
+{
+    asm("" ::: "memory");
+    ttsLockPtr = 0;
+}
+
+int ticketCount = 0;
+int releaseCount = 0;
+void Acquire_TicketLock()
+{
+    int myTicket = __sync_fetch_and_add(&ticketCount, 1);
+    while (releaseCount != myTicket)
+        ;
+}
+void Release_TicketLock()
+{
+    releaseCount++;
+}
+
+
+void Acquire

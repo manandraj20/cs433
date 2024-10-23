@@ -9,9 +9,9 @@ void *work(void *arg)
     {
         // Acquire_Lamport(tid);
         // pthread_mutex_lock(&my_mutex);
-        Acquire_Spinlock();
-        // Acquire_TTS();
-        // Acquire_TicketLock();
+        // Acquire_SpinLock();
+        // Acquire_TestAndTestAndSetLock();
+        Acquire_TicketLock();
         // Acquire_ArrayLock(&array_lock_ticket);
         // Acquire_POSIX_mutex();
         // Acquire_Binary_Semaphore();
@@ -23,9 +23,9 @@ void *work(void *arg)
 
         // Release_Lamport( tid);
         // pthread_mutex_unlock(&my_mutex);
-        Release_Spinlock();
-        // Release_TTS();
-        // Release_TicketLock();
+        // Release_SpinLock();
+        // Release_TestAndTestAndSetLock();
+        Release_TicketLock();
         // Release_ArrayLock(&array_lock_ticket);
         // Release_POSIX_mutex();
         // Release_Binary_Semaphore();
@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
     threads = (pthread_t *)malloc(num_threads * sizeof(pthread_t));
     assert(threads != NULL);
     int tid[num_threads];
- 	for(int i = 0; i < num_threads; i++) tid[i] = i;
+    for (int i = 0; i < num_threads; i++)
+        tid[i] = i;
     pthread_attr_init(&attr);
     gettimeofday(&tp_start, NULL);
 
@@ -63,9 +64,9 @@ int main(int argc, char *argv[])
     {
         // Acquire_Lamport(0);
         // pthread_mutex_lock(&my_mutex);
-        Acquire_Spinlock();
-        // Acquire_TTS();
-        // Acquire_TicketLock();
+        // Acquire_SpinLock();
+        // Acquire_TestAndTestAndSetLock();
+        Acquire_TicketLock();
         // Acquire_ArrayLock(&array_lock_ticket);
         // Acquire_POSIX_mutex();
         // Acquire_Binary_Semaphore();
@@ -74,9 +75,9 @@ int main(int argc, char *argv[])
         y++;
         // Release_Lamport(0);
         // pthread_mutex_unlock(&my_mutex);
-        Release_Spinlock();
-        // Release_TTS();
-        // Release_TicketLock();
+        // Release_SpinLock();
+        // Release_TestAndTestAndSetLock();
+        Release_TicketLock();
         // Release_ArrayLock(&array_lock_ticket);
         // Release_POSIX_mutex();
         // Release_Binary_Semaphore();
