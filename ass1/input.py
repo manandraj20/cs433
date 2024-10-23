@@ -1,35 +1,46 @@
+import numpy as np
 import random
 
-def generate_test_case(n, file_name):
-    # Generate a random lower triangular matrix L
-    L = [[0.0] * n for _ in range(n)]
+def generate_test_case(n, filename_matrix, filename_vector):
+    # Generate lower triangular matrix L with random float values (0 to 100)
+    L = np.tril(np.random.randint(0, 100, (n, n)))
+
+    # Ensure diagonal elements are non-zero
     for i in range(n):
-        for j in range(i + 1):  # Ensure it's lower triangular
-            L[i][j] = round(random.uniform(-10, 10), 2)  # Random values between -10 and 10
+        if L[i, i] == 0:
+            L[i, i] = random.randint(1, 100)
 
-    # Generate a random vector x
-    x = [round(random.uniform(-10, 10), 2) for _ in range(n)]
+    # Truncate L to six decimal places
+    L = np.round(L, 6)
 
-    # Compute vector y as L * x
-    y = [0.0] * n
-    for i in range(n):
-        y[i] = sum(L[i][j] * x[j] for j in range(i + 1))
+    # Generate random vector X of size n and truncate to six decimal places
+    X = np.round(np.random.randint(0, 100, n), 6)
 
-    # Write to the output file
-    with open(file_name, 'w') as f:
-        # Write the size of the matrix
+    # Calculate y = L * X
+    y = np.dot(L, X)
+
+    # Write the matrix L and y vector to filename_matrix
+    with open(filename_matrix, 'w') as f:
+        # Write the value of n
         f.write(f"{n}\n")
-        
-        # Write the lower triangular matrix L
+
+        # Write only the lower triangular part of the matrix L row-wise
         for i in range(n):
-            row = " ".join(str(L[i][j]) for j in range(i + 1))
-            f.write(row + "\n")
+            # Only write up to the diagonal (i.e., elements in L[i][0] to L[i][i])
+            f.write(" ".join(f"{L[i, j]:.6f}" for j in range(i+1)) + "\n")
 
-        # Write the vector y
-        f.write(" ".join(str(y_i) for y_i in y) + "\n")
-        
-        # Write the vector x
-        # f.write(" ".join(str(x_i) for x_i in x) + "\n")
+        # Write the y vector without limiting precision
+        f.write(" ".join(str(val) for val in y) + "\n")
 
-# Generate a test case with 100x100 matrix
-generate_test_case(100, "test_case_100.txt")
+    # Write the X vector to filename_vector
+    with open(filename_vector, 'w') as f:
+        f.write(" ".join(f"{val:.6f}" for val in X) + "\n")
+
+# Example usage:
+# generate_test_case(1000, "./Q2T1.txt", "./Q2A1.txt")
+if __name__ == "__main__":
+    # take input from user
+    n = int(input("Enter the value of n: "))
+    filename_matrix = input("Enter the filename for matrix L and y: ")
+    filename_vector = input("Enter the filename for vector X: ")
+    generate_test_case(n, filename_matrix, filename_vector)
