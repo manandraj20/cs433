@@ -65,7 +65,7 @@ unsigned char CompareAndSet(int oldVal, int newVal, int *ptr)
 {
     unsigned char result;
     int oldValOut;
-    asm("lock cmpxchgl %4, %1 ; setzb %0"
+    asm("lock cmpxchgl %4, %1 \n setzb %0"
         : "=qm"(result), "+m"(*ptr), "=a"(oldValOut)
         : "a"(oldVal), "r"(newVal)
         :);
@@ -80,5 +80,6 @@ void Acquire_Spinlock()
 
 void Release_Spinlock()
 {
+    asm("":::"memory");
     spinLockPtr = 0;
 }
