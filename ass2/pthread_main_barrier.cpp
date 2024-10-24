@@ -9,9 +9,9 @@ void *work(void *param)
     for (int i = 0; i < N_barrier; i++)
     {
         // Rev_Sense_Barrier(&curr_sense);
-        Tree_Barrier(id);
+        // Tree_Barrier(id);
         // Central_POSIX_Barrier();
-        // Tree_CV_Barrier(id);
+        Tree_CV_Barrier(id);
         // pthread_barrier_wait(&barrier);
     }
 }
@@ -41,13 +41,13 @@ int main(int argc, char *argv[])
     pthread_mutex_init(&Central_Posix_barr.lock, NULL);
     pthread_cond_init(&Central_Posix_barr.cv, NULL);
 
-    // for(int i = 0; i < num_threads; i++) {
-    //     for(int j = 0; j < MAX; j++) {
-    //         Tree_CV_barr[i][j].flag = 0;
-    //         pthread_mutex_init(&Tree_CV_barr[i][j].lock, NULL);
-    //         pthread_cond_init(&Tree_CV_barr[i][j].cv, NULL);
-    //     }
-    // }
+    for(int i = 0; i < num_threads; i++) {
+        for(int j = 0; j <=MAX+1; j++) {
+            Tree_CV_barr[i][16*j].flag = 0;
+            pthread_mutex_init(&Tree_CV_barr[i][16*j].lock, NULL);
+            pthread_cond_init(&Tree_CV_barr[i][16*j].cv, NULL);
+        }
+    }
 
     // pthread_barrier_init(&barrier, NULL, num_threads);
 
@@ -71,9 +71,9 @@ int main(int argc, char *argv[])
     for (int i = 0; i < N_barrier; i++)
     {
         // Rev_Sense_Barrier(&curr_sense);
-        Tree_Barrier(0);
+        // Tree_Barrier(0);
         // Central_POSIX_Barrier();
-        // Tree_CV_Barrier(0);
+        Tree_CV_Barrier(0);
         //    pthread_barrier_wait(&barrier);
     }
 

@@ -235,27 +235,62 @@ void Tree_Barrier(int tid)
 
     for (i = 0, mask = 1; (mask & tid) != 0; ++i, mask <<= 1)
     {
-        while (!flag[tid][16*i])
+        while (!flag[tid][16 * i])
             ;
-        flag[tid][16*i] = 0;
+        flag[tid][16 * i] = 0;
     }
 
     if (tid < (num_threads - 1))
     {
-        flag[tid + mask][16*i] = 1;
+        flag[tid + mask][16 * i] = 1;
 
-        while (!flag[tid][16*(MAX + 1)])
+        while (!flag[tid][16 * (MAX + 1)])
             ;
-        flag[tid][16*(MAX + 1)] = 0;
+        flag[tid][16 * (MAX + 1)] = 0;
     }
 
     for (mask >>= 1; mask > 0; mask >>= 1)
     {
-        flag[tid - mask][16*(MAX + 1)] = 1;
+        flag[tid - mask][16 * (MAX + 1)] = 1;
     }
 }
 
+struct Tree_CV
+{
+    int flag;
+    pthread_mutex_t lock;
+    pthread_cond_t cv;
 
-void Tree_CV_Barrier(int tid){
-    
+} Tree_CV_barr[32][96];
+void Tree_CV_Barrier(int tid)
+{
+    unsigned int i, mask;
+
+    for (int i = 0, mask = 1; (mask & tid) != 0; ++i, mask >>= 1)
+    {
+        pthread_mutex_lock(&Tree_CV_barr[tid][16 * i].lock);
+        pthread_cond_wait(&Tree_CV_barr[tid][16 * i].cv, &Tree_CV_barr[tid][16 * i].lock);
+        pthread_mutex_unlock(&Tree_CV_barr[tid][16 * i].lock);
+    }
+
+    if (tid < (num_threads - 1))
+    {
+        pthread_mutex_lock(&Tree_CV_barr[tid + mask][16 * i].lock);
+        pthread_cond_broadcast(&Tree_CV_barr[tid + mask][16 * i].cv);
+        pthread_mutex_unlock(&Tree_CV_barr[tid + mask][16 * i].lock);
+
+        pthread_mutex_lock(&Tree_CV_barr[tid][16 * (MAX + 1)].lock);
+        pthread_cond_wait(&Tree_CV_barr[tid][16 * (MAX + 1)].cv, &Tree_CV_barr[tid][16 * (MAX + 1)].lock);
+        // Tree_CV_barr[tid][16 * (MAX + 1)].flag = 0;
+        pthread_mutex_unlock(&Tree_CV_barr[tid][16 * (MAX + 1)].lock);
+    }
+    for (mask >>= 1; mask > 0; mask >>= 1)
+    {
+        pthread_mutex_lock(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].lock);
+        // print tid and mask
+        
+        // Tree_CV_barr[tid - mask][16 * (MAX + 1)].flag = 1;
+        pthread_cond_broadcast(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].cv);
+        pthread_mutex_unlock(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].lock);
+    }
 }
