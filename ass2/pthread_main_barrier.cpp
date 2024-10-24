@@ -1,6 +1,6 @@
 #include "sync_library.cpp"
 using namespace std;
-int N_barrier = 1e6;
+int N_barrier = 1;
 
 void *work(void *param)
 {
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     pthread_cond_init(&Central_Posix_barr.cv, NULL);
 
     for(int i = 0; i < num_threads; i++) {
-        for(int j = 0; j <=MAX+1; j++) {
+        for(int j = 0; j <=(MAX+1); j++) {
             Tree_CV_barr[i][16*j].flag = 0;
             pthread_mutex_init(&Tree_CV_barr[i][16*j].lock, NULL);
             pthread_cond_init(&Tree_CV_barr[i][16*j].cv, NULL);

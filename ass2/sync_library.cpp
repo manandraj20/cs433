@@ -266,31 +266,54 @@ void Tree_CV_Barrier(int tid)
 {
     unsigned int i, mask;
 
-    for (int i = 0, mask = 1; (mask & tid) != 0; ++i, mask >>= 1)
+    for (i = 0, mask = 1; (mask & tid) != 0; ++i, mask <<= 1)
     {
         pthread_mutex_lock(&Tree_CV_barr[tid][16 * i].lock);
-        pthread_cond_wait(&Tree_CV_barr[tid][16 * i].cv, &Tree_CV_barr[tid][16 * i].lock);
+        // print waiting on tid on 16*i
+        // cout << "waiting on tid " << tid << " on 16*i " << i << endl;
+        while (!Tree_CV_barr[tid][16 * i].flag)
+            pthread_cond_wait(&Tree_CV_barr[tid][16 * i].cv, &Tree_CV_barr[tid][16 * i].lock);
+
+        Tree_CV_barr[tid][16 * i].flag = 0;
+        // print signal received for tid
+        // cout << "signal received for tid " << tid << endl;
+
         pthread_mutex_unlock(&Tree_CV_barr[tid][16 * i].lock);
+        // print i and mask
+        // cout << "i " << i << " mask " << mask << endl;
     }
 
     if (tid < (num_threads - 1))
     {
         pthread_mutex_lock(&Tree_CV_barr[tid + mask][16 * i].lock);
-        pthread_cond_broadcast(&Tree_CV_barr[tid + mask][16 * i].cv);
+        // print tid and mask
+        // cout << "tid " << tid << " mask " << mask << endl;
+        // // print cv signal broadcasted for tid+mask on 16*i
+        // cout << "cv signal broadcasted for tid+mask " << tid + mask << " on 16*i " << 16 * i << endl;
+        Tree_CV_barr[tid + mask][16 * i].flag = 1;
+        pthread_cond_signal(&Tree_CV_barr[tid + mask][16 * i].cv);
         pthread_mutex_unlock(&Tree_CV_barr[tid + mask][16 * i].lock);
 
         pthread_mutex_lock(&Tree_CV_barr[tid][16 * (MAX + 1)].lock);
-        pthread_cond_wait(&Tree_CV_barr[tid][16 * (MAX + 1)].cv, &Tree_CV_barr[tid][16 * (MAX + 1)].lock);
-        // Tree_CV_barr[tid][16 * (MAX + 1)].flag = 0;
+        // print waiting
+        cout << "waiting on tid " << tid << " on 16*(MAX+1)" << 16*(MAX+1)<<endl;
+        while (!Tree_CV_barr[tid][16*(MAX + 1)].flag)
+            pthread_cond_wait(&Tree_CV_barr[tid][16 * (MAX + 1)].cv, &Tree_CV_barr[tid][16 * (MAX + 1)].lock);
+        Tree_CV_barr[tid][16 * (MAX + 1)].flag = 0;
+        // print signal received for tid
+        cout << "signal received for tid " << tid << endl;
         pthread_mutex_unlock(&Tree_CV_barr[tid][16 * (MAX + 1)].lock);
     }
     for (mask >>= 1; mask > 0; mask >>= 1)
     {
+        cout << "tid " << tid << " mask " << mask << endl;
         pthread_mutex_lock(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].lock);
         // print tid and mask
-        
-        // Tree_CV_barr[tid - mask][16 * (MAX + 1)].flag = 1;
-        pthread_cond_broadcast(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].cv);
+
+        Tree_CV_barr[tid - mask][16 * (MAX + 1)].flag = 1;
+        pthread_cond_signal(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].cv);
+        // print signal broadcasted for tid-mask on 16*(MAX+1)
+        cout << "signal broadcasted for tid-mask " << tid - mask << " on 16*(MAX+1)" << 16*(MAX+1) << endl;
         pthread_mutex_unlock(&Tree_CV_barr[tid - mask][16 * (MAX + 1)].lock);
     }
 }
