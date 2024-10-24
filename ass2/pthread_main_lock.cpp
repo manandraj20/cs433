@@ -1,4 +1,4 @@
-#include "custom_lock.cpp"
+#include "custom_locks.cpp"
 using namespace std;
 
 void *work(void *arg)
@@ -7,9 +7,9 @@ void *work(void *arg)
 
     for (int i = 0; i < N; i++)
     {
-        Acquire_Lamport(tid);
+        // Acquire_Lamport(tid);
         // pthread_mutex_lock(&my_mutex);
-        // Acquire_SpinLock();
+        Acquire_Spinlock();
         // Acquire_TTS();
         // Acquire_TicketLock();
         // Acquire_ArrayLock(&array_lock_ticket);
@@ -21,9 +21,9 @@ void *work(void *arg)
         x = y + 1;
         y++;
 
-        Release_Lamport( tid);
+        // Release_Lamport( tid);
         // pthread_mutex_unlock(&my_mutex);
-        // Release_SpinLock();
+        Release_Spinlock();
         // Release_TTS();
         // Release_TicketLock();
         // Release_ArrayLock(&array_lock_ticket);
@@ -56,19 +56,14 @@ int main(int argc, char *argv[])
 
     for (i = 1; i < num_threads; i++)
     {
-        /* pthread_create arguments: thread pointer,
-                                     attribute pointer,
-                                     function pointer,
-                                     argument pointer to the function
-        */
         pthread_create(&threads[i], &attr, work, &tid[i]);
     }
 
     for (int i = 0; i < N; i++)
     {
-        Acquire_Lamport(0);
+        // Acquire_Lamport(0);
         // pthread_mutex_lock(&my_mutex);
-        // Acquire_SpinLock();
+        Acquire_Spinlock();
         // Acquire_TTS();
         // Acquire_TicketLock();
         // Acquire_ArrayLock(&array_lock_ticket);
@@ -77,9 +72,9 @@ int main(int argc, char *argv[])
         assert(x == y);
         x = y + 1;
         y++;
-        Release_Lamport(0);
+        // Release_Lamport(0);
         // pthread_mutex_unlock(&my_mutex);
-        // Release_SpinLock();
+        Release_Spinlock();
         // Release_TTS();
         // Release_TicketLock();
         // Release_ArrayLock(&array_lock_ticket);
