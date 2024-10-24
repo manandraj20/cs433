@@ -1,11 +1,12 @@
-#include "custom_locks.cpp"
+#include "sync_library.cpp"
 using namespace std;
+int N_lock = 1e7; // 10^7 iterations
 
 void *work(void *arg)
 {
     int tid = *(int *)arg;
 
-    for (int i = 0; i < N; i++)
+    for (int i = 0; i < N_lock; i++)
     {
         int array_lock_ticket;
         // Acquire_Lamport(tid);
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
         pthread_create(&threads[i], &attr, work, &tid[i]);
     }
 
-    for (int i = 0; i < N; i++)
+    for (int i = 0; i < N_lock; i++)
     {
         // Acquire_Lamport(0);
         // pthread_mutex_lock(&my_mutex);
@@ -95,8 +96,10 @@ int main(int argc, char *argv[])
 
     gettimeofday(&tp_end, NULL);
 
+    assert (x == y);
+    assert (x == N_lock * num_threads);
+
     printf("Total time: %ld microseconds\n", tp_end.tv_sec * 1000000 + tp_end.tv_usec - (tp_start.tv_sec * 1000000 + tp_start.tv_usec));
-    printf("x = %d, y = %d\n", x, y);
-    assert(x == N * num_threads);
+    
     return 0;
 }
