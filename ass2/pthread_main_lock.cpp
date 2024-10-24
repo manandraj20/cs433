@@ -7,12 +7,13 @@ void *work(void *arg)
 
     for (int i = 0; i < N; i++)
     {
+        int array_lock_ticket;
         // Acquire_Lamport(tid);
         // pthread_mutex_lock(&my_mutex);
         // Acquire_SpinLock();
         // Acquire_TestAndTestAndSetLock();
-        Acquire_TicketLock();
-        // Acquire_ArrayLock(&array_lock_ticket);
+        // Acquire_TicketLock();
+        Acquire_ArrayLock(&array_lock_ticket);
         // Acquire_POSIX_mutex();
         // Acquire_Binary_Semaphore();
 
@@ -25,8 +26,8 @@ void *work(void *arg)
         // pthread_mutex_unlock(&my_mutex);
         // Release_SpinLock();
         // Release_TestAndTestAndSetLock();
-        Release_TicketLock();
-        // Release_ArrayLock(&array_lock_ticket);
+        // Release_TicketLock();
+        Release_ArrayLock(&array_lock_ticket);
         // Release_POSIX_mutex();
         // Release_Binary_Semaphore();
     }
@@ -35,6 +36,10 @@ void *work(void *arg)
 int main(int argc, char *argv[])
 {
     int i, j;
+    int array_lock_ticket;
+    for (int i = 1; i < MAX_SIZE; i++)
+        available[i] = 0;
+    available[0] = 1;
     pthread_mutex_init(&my_mutex, NULL);
     pthread_t *threads;
     pthread_attr_t attr;
@@ -66,8 +71,8 @@ int main(int argc, char *argv[])
         // pthread_mutex_lock(&my_mutex);
         // Acquire_SpinLock();
         // Acquire_TestAndTestAndSetLock();
-        Acquire_TicketLock();
-        // Acquire_ArrayLock(&array_lock_ticket);
+        // Acquire_TicketLock();
+        Acquire_ArrayLock(&array_lock_ticket);
         // Acquire_POSIX_mutex();
         // Acquire_Binary_Semaphore();
         assert(x == y);
@@ -77,8 +82,8 @@ int main(int argc, char *argv[])
         // pthread_mutex_unlock(&my_mutex);
         // Release_SpinLock();
         // Release_TestAndTestAndSetLock();
-        Release_TicketLock();
-        // Release_ArrayLock(&array_lock_ticket);
+        // Release_TicketLock();
+        Release_ArrayLock(&array_lock_ticket);
         // Release_POSIX_mutex();
         // Release_Binary_Semaphore();
     }
