@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+// #include <bits/stdc++.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<pthread.h>
+#include<assert.h>
 #include <pthread.h>
 #include <sys/time.h>
 using namespace std;
@@ -43,7 +47,7 @@ void Acquire_Lamport(int tid)
     // using max_element violate the consistency
     // probably some compiler optimization is causing this issue ?
     // ticket[tid] = *max_element(ticket, ticket + num_threads) + 1;
-
+    // asm("mfence" ::: "memory");
     asm("" ::: "memory"); // apply asm memory clobber to make sure that the compiler doesnt optimise memory accesses around the assembly block that break program logic
     choosing[16 * tid] = 0;
     asm("mfence" ::: "memory"); // Ensure "choosing" is 0 before proceeding
@@ -99,7 +103,7 @@ void Acquire_TestAndTestAndSetLock()
 {
     while (!CompareAndSet(0, 1, &ttsLockPtr))
     {
-        while (spinLockPtr)
+        while (ttsLockPtr)
             ;
     }
 }
@@ -150,7 +154,7 @@ void Release_TicketLock()
 }
 
 int next_ticket = 0;
-int available[MAX_SIZE];
+unsigned char available[MAX_SIZE];
 void Acquire_ArrayLock(int *ticket)
 {
     *ticket = FetchAndInc(&next_ticket);
@@ -174,13 +178,14 @@ struct bar_type
 {
     int counter;
     pthread_mutex_t lock;
-    int flag = 0;
+    int flag;
 } bar_name;
 
 void init_bar()
 {
     pthread_mutex_init(&bar_name.lock, NULL);
     bar_name.counter = 0;
+    bar_name.flag = 0;
 }
 
 void Rev_Sense_Barrier(int *local_sense)

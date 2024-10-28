@@ -1,6 +1,7 @@
 #include "sync_library.cpp"
+
 using namespace std;
-int N_lock = 1e7; // 10^7 iterations
+int N_lock = 10000000; // 10^7 iterations
 
 void *work(void *arg)
 {
@@ -13,8 +14,8 @@ void *work(void *arg)
         // pthread_mutex_lock(&my_mutex);
         // Acquire_SpinLock();
         // Acquire_TestAndTestAndSetLock();
-        // Acquire_TicketLock();
-        Acquire_ArrayLock(&array_lock_ticket);
+        Acquire_TicketLock();
+        // Acquire_ArrayLock(&array_lock_ticket);
         // Acquire_POSIX_mutex();
         // Acquire_Binary_Semaphore();
 
@@ -27,8 +28,8 @@ void *work(void *arg)
         // pthread_mutex_unlock(&my_mutex);
         // Release_SpinLock();
         // Release_TestAndTestAndSetLock();
-        // Release_TicketLock();
-        Release_ArrayLock(&array_lock_ticket);
+        Release_TicketLock();
+        // Release_ArrayLock(&array_lock_ticket);
         // Release_POSIX_mutex();
         // Release_Binary_Semaphore();
     }
@@ -72,8 +73,8 @@ int main(int argc, char *argv[])
         // pthread_mutex_lock(&my_mutex);
         // Acquire_SpinLock();
         // Acquire_TestAndTestAndSetLock();
-        // Acquire_TicketLock();
-        Acquire_ArrayLock(&array_lock_ticket);
+        Acquire_TicketLock();
+        // Acquire_ArrayLock(&array_lock_ticket);
         // Acquire_POSIX_mutex();
         // Acquire_Binary_Semaphore();
         assert(x == y);
@@ -83,8 +84,8 @@ int main(int argc, char *argv[])
         // pthread_mutex_unlock(&my_mutex);
         // Release_SpinLock();
         // Release_TestAndTestAndSetLock();
-        // Release_TicketLock();
-        Release_ArrayLock(&array_lock_ticket);
+        Release_TicketLock();
+        // Release_ArrayLock(&array_lock_ticket);
         // Release_POSIX_mutex();
         // Release_Binary_Semaphore();
     }
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
     assert (x == y);
     assert (x == N_lock * num_threads);
 
-    printf("Total time: %ld microseconds\n", tp_end.tv_sec * 1000000 + tp_end.tv_usec - (tp_start.tv_sec * 1000000 + tp_start.tv_usec));
-    
+    // printf("Total time: %ld microseconds\n", tp_end.tv_sec * 1000000 + tp_end.tv_usec - (tp_start.tv_sec * 1000000 + tp_start.tv_usec));
+    printf("%ld\n", tp_end.tv_sec * 1000000 + tp_end.tv_usec - (tp_start.tv_sec * 1000000 + tp_start.tv_usec));
     return 0;
 }

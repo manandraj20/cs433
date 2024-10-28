@@ -1,6 +1,9 @@
 #include "sync_library.cpp"
 using namespace std;
-int N_barrier = 1e6;
+int N_barrier = 1000000;
+
+// declare the barrier                  
+pthread_barrier_t barrier;
 
 void *work(void *param)
 {
@@ -11,8 +14,8 @@ void *work(void *param)
         // Rev_Sense_Barrier(&curr_sense);
         // Tree_Barrier(id);
         // Central_POSIX_Barrier();
-        Tree_CV_Barrier(id);
-        // pthread_barrier_wait(&barrier);
+        // Tree_CV_Barrier(id);
+        pthread_barrier_wait(&barrier);
     }
 }
 
@@ -49,7 +52,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // pthread_barrier_init(&barrier, NULL, num_threads);
+    pthread_barrier_init(&barrier, NULL, num_threads);
 
     tid = (pthread_t *)malloc(num_threads * sizeof(pthread_t));
     int id[num_threads];
@@ -73,8 +76,8 @@ int main(int argc, char *argv[])
         // Rev_Sense_Barrier(&curr_sense);
         // Tree_Barrier(0);
         // Central_POSIX_Barrier();
-        Tree_CV_Barrier(0);
-        //    pthread_barrier_wait(&barrier);
+        // Tree_CV_Barrier(0);
+           pthread_barrier_wait(&barrier);
     }
 
     for (int i = 1; i < num_threads; i++)
@@ -85,4 +88,5 @@ int main(int argc, char *argv[])
     gettimeofday(&tv1, &tz1);
 
     printf("Time: %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
+    return 0;
 }
