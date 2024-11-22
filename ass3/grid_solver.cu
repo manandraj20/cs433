@@ -7,19 +7,22 @@
 #include <cooperative_groups.h>
 namespace cg = cooperative_groups;
 
-#define ROWS_A ((1 << 9) + 2)
-#define COLS_A ((1 << 9) + 2)
+#define ROWS_A ((1 << 10) + 2)
+#define COLS_A ((1 << 10) + 2)
 
-#define THREADS_PER_BLOCK_X 32
-#define THREADS_PER_BLOCK_Y 32
+#define THREADS_PER_BLOCK_X 16
+#define THREADS_PER_BLOCK_Y 16
 
-#define SPAN_PER_THREAD_X 16
-#define SPAN_PER_THREAD_Y 16
+#define SPAN_PER_THREAD_X 8
+#define SPAN_PER_THREAD_Y 8
 #define BLOCKS_X ((COLS_A - 2) / (THREADS_PER_BLOCK_X * SPAN_PER_THREAD_X))
 #define BLOCKS_Y ((ROWS_A - 2) / (THREADS_PER_BLOCK_Y * SPAN_PER_THREAD_Y))
 
-#define TOL 1e-5
+#define TOL 1e-6
 #define ITER_LIMIT 1000
+
+__device__ int count = 0;
+__device__ volatile int barrier_flag = 0;
 
 __managed__ float global_diff;
 
@@ -32,7 +35,7 @@ __global__ void init_kernel(float *A)
     {
         for (int j = col; j < col + SPAN_PER_THREAD_X; j++)
         {
-            A[j + COLS_A * i] = (float)(row*col)/(ROWS_A * COLS_A);
+            A[j + COLS_A * i] = (float)(row * col) / (ROWS_A * COLS_A);
         }
     }
 }
@@ -55,6 +58,8 @@ __global__ void grid_solver_kernel(float *A)
 {
     int i, j, done = 0, iters = 0;
     float temp, local_diff;
+    int local_sense = 0;
+    int last_count;
     int col = (threadIdx.x + blockIdx.x * blockDim.x) * SPAN_PER_THREAD_X + 1;
     int row = (threadIdx.y + blockIdx.y * blockDim.y) * SPAN_PER_THREAD_Y + 1;
 
@@ -67,7 +72,19 @@ __global__ void grid_solver_kernel(float *A)
         }
         // cg::grid_group grid = cg::this_grid();
         // grid.sync();
+        local_sense = (local_sense ? 0 : 1);
         __syncthreads();
+        if (threadIdx.x == 0)
+        {
+            last_count = atomicAdd(&count, 1);
+            if (last_count == (BLOCKS_X - 1))
+            {
+                count = 0;
+                barrier_flag = local_sense;
+            }
+        }
+        while (barrier_flag != local_sense)
+            ;
 
         for (i = row; i < row + SPAN_PER_THREAD_Y; i++)
         {
@@ -82,7 +99,21 @@ __global__ void grid_solver_kernel(float *A)
         atomicAdd(&global_diff, local_diff);
         // cg::grid_group grid = cg::this_grid();
         // grid.sync();
+
+        local_sense = (local_sense ? 0 : 1);
         __syncthreads();
+        if (threadIdx.x == 0)
+        {
+            last_count = atomicAdd(&count, 1);
+            if (last_count == (BLOCKS_X - 1))
+            {
+                count = 0;
+                barrier_flag = local_sense;
+            }
+        }
+        while (barrier_flag != local_sense)
+            ;
+
         iters++;
         if (global_diff / (ROWS_A * COLS_A) < TOL || iters >= ITER_LIMIT)
         {
@@ -90,7 +121,25 @@ __global__ void grid_solver_kernel(float *A)
         }
         // cg::grid_group grid = cg::this_grid();
         // grid.sync();
+
+        local_sense = (local_sense ? 0 : 1);
         __syncthreads();
+        if (threadIdx.x == 0)
+        {
+            last_count = atomicAdd(&count, 1);
+            if (last_count == (BLOCKS_X - 1))
+            {
+                count = 0;
+                barrier_flag = local_sense;
+            }
+        }
+        while (barrier_flag != local_sense)
+            ;
+        if(!blockIdx.x && !blockIdx.y)
+        {
+            printf("Iteration: %d, Error: %f\n", iters, global_diff / (ROWS_A * COLS_A));
+        }
+
     }
 }
 
